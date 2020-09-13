@@ -4,31 +4,6 @@
 # @Software: PyCharm
 # @Time    : 2020/9/4 20:36
 
-# 打开在封禁中的IP文件（filter_ip.txt），计算内容的MD5校验完整性，成功则继续。
-# 每指定时间段获取一次日志
-# 按ip统计访问情况，将访问指定次（阀值）以上的拿出来
-# 将所有数据按照ip排序，对同一ip进行以下判断：
-#   1、accessTimes（疑似爆破）：
-#       相邻两次访问时间间隔小于指定值的记为一次恶意请求；
-#       计算所有恶意请求/总访问数的值，大于指定比例的，将此IP记为恶意IP。
-#       添加此IP到待封禁列表。
-#   2、maliciousData（疑似构造恶意请求）：
-#       请求url中存在恶意数据的（以下符号），记为一次恶意请求
-#           sign = [r"\\", "*", "&&", "..", "#", "//"]
-#           word = ["shell", "nc", "bash"]
-#           strs = ["<script>", "<img>", "and 1=1", "and '1' = '1", "<php>"]
-#       计算所有恶意请求/总访问数的值，大于指定比例的，将此IP记为恶意IP。
-#       添加此IP到待封禁列表。
-#   3、badRequest（疑似爆破）：
-#       http请求的响应码连续多次是以下状态码时,记为一次恶意请求
-#           codeList = ["404", "403"]
-#       计算所有恶意请求/总访问数的值，大于指定比例的，将此IP记为恶意IP。
-#       添加此IP到待封禁列表。
-# 打开所有在封禁中的IP文件，对比待封禁列表取出差集，即为需要封禁的IP
-# 执行iptables命令，禁止访问80端口，并将ip、封禁时间作为一条记录存入在封禁中的IP文件及log文件
-# 计算在封禁中IP文件（filter_ip.txt）内容的MD5值，防止被容被篡改。
-# 等待时间，跳转到起始
-
 import os
 import time
 from hashlib import md5
@@ -176,8 +151,8 @@ def filter(ipFilterList, filter_ip_file, logFilePath):
     # ban ip文件
     with open(filter_ip_file, "a") as f:
         for ip in willFilterIP:
-            # cmd = "iptables -I INPUT -p tcp --dport 80 -s " + ip + " -j DROP"
-            # os.system(cmd)
+            cmd = "iptables -I INPUT -p tcp --dport 80 -s " + ip + " -j DROP"
+            os.system(cmd)
             f.write("%-20s\t%s\n" %(ip, time.strftime('%Y-%m-%d/%H:%M:%S', time.localtime(time.time()))))
     # 写入日志文件
     date = datetime.now()
